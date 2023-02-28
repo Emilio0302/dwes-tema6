@@ -15,15 +15,33 @@ class EntradaBd
             $conexion = BaseDatos::getConexion();
 
             $resultado = [];
-            $queryResultado = $conexion->query("select * from entrada");
+            $queryResultado = $conexion->query(
+                "select e.*, u.nombre
+                from entrada e 
+                join usuario u on e.autor = u.id
+                order by creado desc"
+            );
             if ($queryResultado !== false) {
                 while (($fila = $queryResultado->fetch_assoc()) != null) {
+                    $numMeGustas = MegustaBd::contarMeGustas($fila['id']);
+                    if ($numMeGustas === null) {
+                        return null;
+                    }
+
+                    $comentarios = ComentarioBd::getComentarios($fila['id']);
+                    if ($comentarios === null) {
+                        return null;
+                    }
+
                     $entrada = new Entrada(
                         id: $fila['id'],
                         texto: $fila['texto'],
                         imagen: $fila['imagen'],
                         autor: $fila['autor'],
-                        creado: $fila['creado']
+                        nombreAutor: $fila['nombre'],
+                        creado: $fila['creado'],
+                        numMeGustas: $numMeGustas,
+                        comentarios: $comentarios
                     );
                     $resultado[] = $entrada;
                 }
@@ -39,7 +57,14 @@ class EntradaBd
     {
         try {
             $conexion = BaseDatos::getConexion();
-            $sentencia = $conexion->prepare("select * from entrada where id=?");
+            $sentencia = $conexion->prepare(
+                "select e.*, u.nombre
+                from entrada e join usuario u
+                on e.autor = u.id
+                where e.id = ?
+                order by creado desc"
+            );
+
             $sentencia->bind_param('i', $id);
             $sentencia->execute();
             $resultado = $sentencia->get_result();
@@ -47,12 +72,25 @@ class EntradaBd
             if ($fila == null) {
                 return null;
             } else {
+                $numMeGustas = MegustaBd::contarMeGustas($id);
+                if ($numMeGustas === null) {
+                    return null;
+                }
+
+                $comentarios = ComentarioBd::getComentarios($id);
+                if ($comentarios === null) {
+                    return null;
+                }
+
                 return new Entrada(
                     id: $fila['id'],
                     texto: $fila['texto'],
                     imagen: $fila['imagen'],
                     autor: $fila['autor'],
-                    creado: $fila['creado']
+                    nombreAutor: $fila['nombre'],
+                    creado: $fila['creado'],
+                    numMeGustas: $numMeGustas,
+                    comentarios: $comentarios
                 );
             }
         } catch (\Exception $e) {
@@ -116,16 +154,15 @@ class EntradaBd
             return null;
         }
     }
-    public static function insertarImagen(string $ruta) : bool
+    public static function insertarImagen(string $ruta): bool
     {
         $fichero = $_FILES['imagen']['tmp_name'];
 
         return move_uploaded_file($fichero, $ruta);
     }
-    
-    public static function eliminarImagen(string $ruta) : bool
+
+    public static function eliminarImagen(string $ruta): bool
     {
         return unlink($ruta);
     }
-
 }

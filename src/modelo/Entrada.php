@@ -12,7 +12,10 @@ class Entrada extends Modelo
         private int|null $id = null,
         private string|null $imagen = null,
         private int|null $autor = null,
-        private int|null $creado = null
+        private string|null $nombreAutor = null,
+        private int|null $creado = null,
+        private int|null $numMeGustas = null,
+        private array|null $comentarios = null
     ) {
         $this->errores = [
             'texto' => $texto === null || empty($texto) ? 'El texto no puede estar vacío' : null,
@@ -28,8 +31,12 @@ class Entrada extends Modelo
         
         $entrada = new Entrada(
             texto: isset($texto) ? $texto : null,
-            autor: (new Sesion)->getId()
+            autor: (new Sesion)->getId(),
+            nombreAutor: (new Sesion)->getNombre(),
+            numMeGustas: 0,
+            comentarios: []
         );
+
         if ($_FILES && isset($_FILES['imagen']) &&
             $_FILES['imagen']['error'] === UPLOAD_ERR_OK &&
             $_FILES['imagen']['size'] > 0) {
@@ -82,6 +89,21 @@ class Entrada extends Modelo
     public function getAutor(): int|null
     {
         return $this->autor;
+    }
+
+    public function getNombreAutor(): string|null
+    {
+        return $this->nombreAutor;
+    }
+
+    public function getNumMeGustas(): int|null
+    {
+        return $this->numMeGustas;
+    }
+
+    public function getComentarios(): array|null
+    {
+        return $this->comentarios;
     }
 
     public function getCreado(): int|null

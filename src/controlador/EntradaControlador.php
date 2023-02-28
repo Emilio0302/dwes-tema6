@@ -17,7 +17,7 @@ class EntradaControlador extends Controlador
 
     public function detalle(): Entrada|array|null
     {
-        if (!$_GET['id'] && !isset($_GET['id'])) {
+        if (!$_GET['id'] || !isset($_GET['id'])) {
             $this->vista = "entrada/lista";
             return EntradaBd::getEntradas();
         }
@@ -62,7 +62,7 @@ class EntradaControlador extends Controlador
                 return null;
             }
         }
-        
+
         $id = EntradaBd::insertar($entrada);
         if ($id !== null) {
             $this->vista = "entrada/detalle";
@@ -80,7 +80,7 @@ class EntradaControlador extends Controlador
             return false;
         }
 
-        if (!$_GET['id'] && !isset($_GET['id'])) {
+        if (!$_GET['id'] || !isset($_GET['id'])) {
             $this->vista = "entrada/lista";
             return EntradaBd::getEntradas();
         }
@@ -90,18 +90,18 @@ class EntradaControlador extends Controlador
             $this->vista = "entrada/lista";
             return null;
         }
-        
+
         $entrada = EntradaBd::getEntrada($id);
         if (!$this->mismoUsuario($entrada->getAutor())) {
-           $this->vista = "errores/403";
-           return null;
+            $this->vista = "errores/403";
+            return null;
         }
-        
-        $img = $entrada->getImagen(); 
+
+        $img = $entrada->getImagen();
         if ($img !== null) {
             EntradaBd::eliminarImagen($img);
         }
-        
+
         $eliminar = EntradaBd::eliminar($id);
         if ($eliminar) {
             $this->vista = "entrada/eliminar";
